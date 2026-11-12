@@ -1,13 +1,13 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 
-vi.mock('../api/client', () => ({
+vi.mock('../interfaces/api/client', () => ({
   request: vi.fn(),
   getToken: () => 'tok',
   ApiError: class extends Error {},
 }))
-import { uploadsApi } from '../api/resources'
-import AuthImage from '../components/common/AuthImage.vue'
+import { uploadsApi } from '../interfaces/api/resources'
+import AuthImage from '../files/components/AuthImage.vue'
 
 class FakeXHR {
   static last: FakeXHR | null = null

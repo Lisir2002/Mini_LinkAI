@@ -1,6 +1,6 @@
 import { build } from 'esbuild'
 import { writeFileSync } from 'node:fs'
-const r = await build({ entryPoints:['src/icons/index.ts'], bundle:true, write:false, format:'cjs', platform:'node' })
+const r = await build({ entryPoints:['src/theme/icons/index.ts'], bundle:true, write:false, format:'cjs', platform:'node' })
 const mod = { exports:{} }
 new Function('module','exports', r.outputFiles[0].text)(mod, mod.exports)
 const { icons } = mod.exports

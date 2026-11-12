@@ -8,7 +8,7 @@ describe('路由守卫', () => {
   })
 
   it('未登录访问受保护路由跳登录并带 redirect', async () => {
-    const { buildRouter } = await import('../router')
+    const { buildRouter } = await import('../core/router')
     const router = buildRouter()
     await router.push('/msgs')
     await router.isReady()
@@ -17,8 +17,8 @@ describe('路由守卫', () => {
   })
 
   it('非管理员访问后台跳 403', async () => {
-    const { useAuthStore } = await import('../stores/auth')
-    const { buildRouter } = await import('../router')
+    const { useAuthStore } = await import('../core/stores/auth')
+    const { buildRouter } = await import('../core/router')
     const auth = useAuthStore()
     auth.setUser({ id: 1, nickname: 'u', email: 'u***@x.com', role: 'member',
                    must_change_password: false, daily_msg_limit: 50, daily_token_limit: 1000 })
@@ -29,8 +29,8 @@ describe('路由守卫', () => {
   })
 
   it('首次改密未完成时强制跳改密页', async () => {
-    const { useAuthStore } = await import('../stores/auth')
-    const { buildRouter } = await import('../router')
+    const { useAuthStore } = await import('../core/stores/auth')
+    const { buildRouter } = await import('../core/router')
     const auth = useAuthStore()
     auth.setUser({ id: 1, nickname: 'a', email: 'a***@x.com', role: 'admin',
                    must_change_password: true, daily_msg_limit: 50, daily_token_limit: 1000 })
@@ -41,8 +41,8 @@ describe('路由守卫', () => {
   })
 
   it('已登录访问登录页跳消息页', async () => {
-    const { useAuthStore } = await import('../stores/auth')
-    const { buildRouter } = await import('../router')
+    const { useAuthStore } = await import('../core/stores/auth')
+    const { buildRouter } = await import('../core/router')
     const auth = useAuthStore()
     auth.setUser({ id: 1, nickname: 'u', email: 'u***@x.com', role: 'member',
                    must_change_password: false, daily_msg_limit: 50, daily_token_limit: 1000 })
@@ -63,7 +63,7 @@ describe('刷新后状态恢复', () => {
         must_change_password: false, daily_msg_limit: 50, daily_token_limit: 1000 },
     }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
     vi.stubGlobal('fetch', fetchMock)
-    const { buildRouter } = await import('../router')
+    const { buildRouter } = await import('../core/router')
     const router = buildRouter()
     await router.push('/admin/channels')
     expect(fetchMock).toHaveBeenCalled()

@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
-import { icons, LEGACY_MAP } from '../icons'
+import { icons, LEGACY_MAP } from '../theme/icons'
 
 function vueFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((n) => {

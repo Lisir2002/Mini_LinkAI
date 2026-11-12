@@ -1,14 +1,14 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
-import StructuredView from '../components/common/StructuredView.vue'
+import StructuredView from '../llm/components/StructuredView.vue'
 
-vi.mock('../api/client', () => ({
+vi.mock('../interfaces/api/client', () => ({
   request: vi.fn(),
   getToken: () => 't',
   ApiError: class extends Error {},
 }))
-import { request } from '../api/client'
-import { roomsApi } from '../api/rooms'
+import { request } from '../interfaces/api/client'
+import { roomsApi } from '../interfaces/api/rooms'
 
 const mockReq = request as unknown as ReturnType<typeof vi.fn>
 

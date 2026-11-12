@@ -1,12 +1,12 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 
-vi.mock('../api/client', () => ({
+vi.mock('../interfaces/api/client', () => ({
   request: vi.fn(),
   getToken: () => 't',
   ApiError: class extends Error {},
 }))
-import { request } from '../api/client'
-import { experimentsApi } from '../api/resources'
+import { request } from '../interfaces/api/client'
+import { experimentsApi } from '../interfaces/api/resources'
 
 const mockReq = request as unknown as ReturnType<typeof vi.fn>
 

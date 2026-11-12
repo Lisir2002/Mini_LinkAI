@@ -66,3 +66,25 @@ ruff check backend && mypy backend/app && cd frontend && npm run lint && npm run
 ---
 
 内容由 AI 生成
+
+## 系统结构（2026-11-13 重构后）
+
+后端 backend/app/ 按系统垂直切分，每系统自带 api + services：
+- core/ 核心系统：config/db/redis/security/crypto/errors/logging/ratelimit/idempotency/timeutil/startup
+- users/ 用户系统（含群聊）：auth/friends/dm/rooms/templates/search + invite/audit/quote/dm_bus/room_bus
+- files/ 文件系统：uploads/shares + upload/export 服务
+- llm/ 大模型接入与输出系统：adapter(三协议)/channels/models/routing/quota/output_mode/drift/conversations
+- stats/ 统计与可观测系统：feedback/live/precompute/experiments/channel_health/alerts/tasks/scheduler
+- admin/ 治理系统：settings/用户管理/邀请码/渠道模型管理路由
+- interfaces/ 接口系统：app 装配/deps/中间件/WS 端点/健康检查；app/main.py 为薄入口（uvicorn app.main:app 不变）
+
+前端 frontend/src/：
+- theme/ 统一主题UI令牌系统：tokens.css/base.css/icons/通用组件/theme store
+- core/ 核心：router/auth/toast/sockets
+- interfaces/ 接口层：api client/sse/types/resources/rooms
+- users/ 用户视图（登录/好友/私聊/房间/消息列表等）
+- files/ 文件视图与组件（AuthImage/ShareExportDrawer/分享页）
+- llm/ 大模型视图（Chat/Channels/Models/StructuredView）
+- stats/ 统计视图（Stats/Experiments/Sparkline）
+- admin/ 治理视图（AdminLayout/Settings/Invites）
+

@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import { buildRouter } from '../router'
+import { buildRouter } from '../core/router'
 
 describe('底部三格导航', () => {
   it('恰好三格且顺序为 消息/列表/我的', async () => {
-    const TabBar = (await import('../components/common/TabBar.vue')).default
+    const TabBar = (await import('../theme/components/TabBar.vue')).default
     const pinia = createPinia()
     setActivePinia(pinia)
     const router = buildRouter()
@@ -19,7 +19,7 @@ describe('底部三格导航', () => {
   })
 
   it('未读角标只在消息格出现', async () => {
-    const TabBar = (await import('../components/common/TabBar.vue')).default
+    const TabBar = (await import('../theme/components/TabBar.vue')).default
     const pinia = createPinia()
     setActivePinia(pinia)
     const router = buildRouter()

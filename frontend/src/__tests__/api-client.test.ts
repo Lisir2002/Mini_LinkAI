@@ -7,7 +7,7 @@ describe('API 客户端', () => {
   })
 
   it('注入 Authorization 并从环境变量取基址', async () => {
-    const { setToken, request } = await import('../api/client')
+    const { setToken, request } = await import('../interfaces/api/client')
     setToken('tok-123')
     const fetchMock = vi.fn().mockResolvedValue(new Response(
       JSON.stringify({ code: 0, data: { ok: true } }),
@@ -21,7 +21,7 @@ describe('API 客户端', () => {
   })
 
   it('401 清除令牌并触发未授权回调', async () => {
-    const { setToken, getToken, request, onUnauthorized, ApiError } = await import('../api/client')
+    const { setToken, getToken, request, onUnauthorized, ApiError } = await import('../interfaces/api/client')
     setToken('expired')
     const handler = vi.fn()
     onUnauthorized(handler)
@@ -33,7 +33,7 @@ describe('API 客户端', () => {
   })
 
   it('业务错误保留 code 与 message', async () => {
-    const { request, ApiError } = await import('../api/client')
+    const { request, ApiError } = await import('../interfaces/api/client')
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(
       JSON.stringify({ code: 'INVITE_CODE_INVALID', message: '邀请码无效或已被使用' }),
       { status: 422 })))
@@ -49,7 +49,7 @@ describe('API 客户端', () => {
   })
 
   it('429 透出重试等待秒数', async () => {
-    const { request, ApiError } = await import('../api/client')
+    const { request, ApiError } = await import('../interfaces/api/client')
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(
       JSON.stringify({ code: 'ACCOUNT_LOCKED', message: '尝试过于频繁，请 900 秒后重试' }),
       { status: 423 })))

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { RoomSocket } from '../composables/roomSocket'
+import { RoomSocket } from '../core/composables/roomSocket'
 
 class FakeWS {
   static instances: FakeWS[] = []

@@ -9,7 +9,7 @@ describe('主题 store', () => {
   })
 
   it('默认白天主题', async () => {
-    const { useThemeStore } = await import('../stores/theme')
+    const { useThemeStore } = await import('../theme/store')
     const t = useThemeStore()
     t.init()
     expect(t.theme).toBe('light')
@@ -17,7 +17,7 @@ describe('主题 store', () => {
   })
 
   it('切换后写入 DOM 与 localStorage', async () => {
-    const { useThemeStore } = await import('../stores/theme')
+    const { useThemeStore } = await import('../theme/store')
     const t = useThemeStore()
     t.init()
     t.toggle()
@@ -28,7 +28,7 @@ describe('主题 store', () => {
 
   it('初始化时读取已保存的选择', async () => {
     localStorage.setItem('chatroom-theme', 'dark')
-    const { useThemeStore } = await import('../stores/theme')
+    const { useThemeStore } = await import('../theme/store')
     const t = useThemeStore()
     t.init()
     expect(t.theme).toBe('dark')

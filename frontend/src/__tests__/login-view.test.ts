@@ -3,14 +3,14 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 
 const requestMock = vi.fn()
-vi.mock('../api/client', async () => {
-  const actual = await vi.importActual<any>('../api/client')
+vi.mock('../interfaces/api/client', async () => {
+  const actual = await vi.importActual<any>('../interfaces/api/client')
   return { ...actual, request: (...a: unknown[]) => requestMock(...a) }
 })
 vi.mock('vue-router', () => ({ useRouter: () => ({ push: vi.fn() }) }))
 
 async function mountLogin() {
-  const Login = (await import('../views/mobile/Login.vue')).default
+  const Login = (await import('../users/views/Login.vue')).default
   return mount(Login, { global: { plugins: [createPinia()] } })
 }
 
@@ -38,7 +38,7 @@ describe('登录注册页', () => {
   })
 
   it('业务错误按后端文案展示', async () => {
-    const { ApiError } = await vi.importActual<any>('../api/client')
+    const { ApiError } = await vi.importActual<any>('../interfaces/api/client')
     requestMock.mockRejectedValue(new ApiError(422, 'INVITE_CODE_INVALID', '邀请码无效或已被使用'))
     const w = await mountLogin()
     await w.findAll('.tab')[1].trigger('click')
@@ -48,7 +48,7 @@ describe('登录注册页', () => {
   })
 
   it('423 锁定显示倒计时', async () => {
-    const { ApiError } = await vi.importActual<any>('../api/client')
+    const { ApiError } = await vi.importActual<any>('../interfaces/api/client')
     requestMock.mockRejectedValue(new ApiError(423, 'ACCOUNT_LOCKED', '尝试过于频繁，请 900 秒后重试'))
     const w = await mountLogin()
     await w.find('.submit').trigger('click')

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { icons, LEGACY_MAP, resolveIcon } from '../icons'
-import AppIcon from '../components/common/AppIcon.vue'
+import { icons, LEGACY_MAP, resolveIcon } from '../theme/icons'
+import AppIcon from '../theme/components/AppIcon.vue'
 
 describe('自绘 SVG 图标库', () => {
   it('每个图标都有图形，且不含外部字体依赖', () => {

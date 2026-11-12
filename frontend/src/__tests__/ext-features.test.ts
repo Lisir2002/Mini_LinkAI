@@ -1,16 +1,16 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { icons } from '../icons'
-import Sparkline from '../components/common/Sparkline.vue'
+import { icons } from '../theme/icons'
+import Sparkline from '../stats/components/Sparkline.vue'
 
-vi.mock('../api/client', () => ({
+vi.mock('../interfaces/api/client', () => ({
   request: vi.fn(),
   getToken: () => 'test-token',
   ApiError: class extends Error {},
 }))
 
-import { request } from '../api/client'
-import { feedbackApi, searchApi, statsApi } from '../api/resources'
+import { request } from '../interfaces/api/client'
+import { feedbackApi, searchApi, statsApi } from '../interfaces/api/resources'
 
 const mockReq = request as unknown as ReturnType<typeof vi.fn>
 

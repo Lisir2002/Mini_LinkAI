@@ -88,7 +88,7 @@ services:
       ROLE: scheduler
     depends_on:
       app: { condition: service_healthy }
-    command: ["python", "-m", "app.scheduler"]
+    command: ["python", "-m", "app.stats.scheduler"]
     networks: [internal]
     deploy:
       resources:
