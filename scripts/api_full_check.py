@@ -15,8 +15,8 @@ import time
 import httpx
 from websockets.sync.client import connect as ws_connect
 
-BASE = "http://127.0.0.1:8000"
-WS = "ws://127.0.0.1:8000"
+BASE = os.environ.get("AICR_BASE", "http://127.0.0.1:8000")
+WS = os.environ.get("AICR_WS", "ws://127.0.0.1:8000")
 ROWS: list[dict] = []
 MODULE = ""
 
@@ -130,7 +130,7 @@ def main() -> None:
     r = check("新建渠道", "POST", "/api/admin/channels",
               c.post(BASE + "/api/admin/channels",
                      json={"name": "实测渠道", "type": "openai_compatible",
-                           "base_url": "http://127.0.0.1:8097/v1", "api_key": "sk-real-check-1234",
+                           "base_url": os.environ.get("AICR_MOCK_URL", "http://127.0.0.1:8097/v1"), "api_key": "sk-real-check-1234",
                            "weight": 100, "priority": 10}, headers=AH), 200)
     ch = r.json()["data"]
     cid = ch["id"]
@@ -160,7 +160,7 @@ def main() -> None:
                  json={"enabled": True}, headers=AH), 200)
     r = c.post(BASE + "/api/admin/channels",
                json={"name": "实测渠道B", "type": "openai_compatible",
-                     "base_url": "http://127.0.0.1:8097/v1", "api_key": "sk-real-check-5678",
+                     "base_url": os.environ.get("AICR_MOCK_URL", "http://127.0.0.1:8097/v1"), "api_key": "sk-real-check-5678",
                      "weight": 50, "priority": 10}, headers=AH)
     cid2 = r.json()["data"]["id"]
 
@@ -193,7 +193,7 @@ def main() -> None:
           c.get(BASE + "/api/admin/settings", headers=AH), 200)
     check("写入告警配置", "PUT", "/api/admin/settings/alert_webhook",
           c.put(BASE + "/api/admin/settings/alert_webhook",
-                json={"value": {"url": "http://127.0.0.1:8097/v1/hook", "type": "generic",
+                json={"value": {"url": os.environ.get("AICR_MOCK_URL", "http://127.0.0.1:8097/v1") + "/hook", "type": "generic",
                                 "enabled": True}, "version": 0}, headers=AH), 200)
     check("非法值 422", "PUT", "/api/admin/settings/alert_webhook",
           c.put(BASE + "/api/admin/settings/alert_webhook",
@@ -588,7 +588,7 @@ def main() -> None:
               "- 成员数据隔离（搜索/会话越权 404）由 204 项单元/集成测试覆盖，本脚本抽查管理员全量视角。",
               "- 真实厂商 Key 联调待用户提供后另行执行（当前上游为本地 mock，协议链路完全一致）。",
               "", "---", "", "内容由 AI 生成", ""]
-    out = "/root/userdata/workspace/prd/API实测报告.md"
+    out = os.environ.get("AICR_REPORT", "/root/userdata/workspace/prd/API实测报告.md")
     with open(out, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
     print(f"\n===== 实测汇总: {passed}/{total} 通过 =====")

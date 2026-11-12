@@ -1,3 +1,4 @@
+import os
 from playwright.sync_api import sync_playwright
 import time
 
@@ -9,7 +10,7 @@ def run():
         pg=ctx.new_page()
         pg.on("console", lambda m: errs.append(m.text) if m.type=="error" else None)
         pg.on("pageerror", lambda e: errs.append("PAGEERROR: "+str(e)))
-        B="http://127.0.0.1:5173"
+        B=os.environ.get("AICR_BASE","http://127.0.0.1:5173")
         def ov(tag):
             o=pg.evaluate("()=>({s:document.documentElement.scrollWidth,c:document.documentElement.clientWidth})")
             print(f"  [{tag}] 宽度 {o['s']}/{o['c']}", "✅" if o['s']<=o['c'] else "❌溢出")
@@ -28,7 +29,7 @@ def run():
         print("4. 渠道页标题:", pg.inner_text("h1")); ov("channels")
         pg.click("text=添加接口"); pg.wait_for_timeout(500)
         pg.fill("input[placeholder='例如：DeepSeek 主账号']","本地 Mock 上游")
-        pg.fill("input[placeholder='https://api.deepseek.com/v1']","http://127.0.0.1:8097/v1")
+        pg.fill("input[placeholder='https://api.deepseek.com/v1']",os.environ.get("AICR_MOCK_URL", "http://127.0.0.1:8097/v1"))
         pg.fill("input[type=password]","sk-mock-e2e-1234")
         pg.click(".drawer button.primary:has-text('保存')"); pg.wait_for_timeout(1200)
         print("5. 渠道已创建:", pg.locator(".card .name").first.inner_text())
@@ -214,7 +215,7 @@ def run():
         # ── EXT-014/015 A/B 实验 ─────────────────────
         ch2 = pg.request.post(B+"/api/admin/channels",
                               data={"name":"实测渠道B","type":"openai_compatible",
-                                    "base_url":"http://127.0.0.1:8097/v1",
+                                    "base_url":os.environ.get("AICR_MOCK_URL", "http://127.0.0.1:8097/v1"),
                                     "api_key":"sk-e2e-second-5678","weight":50,"priority":10},
                               headers={"Authorization": f"Bearer {tok}"}).json()["data"]
         models_l = pg.request.get(B+"/api/admin/models",

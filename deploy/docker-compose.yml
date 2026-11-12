@@ -93,7 +93,7 @@ services:
     deploy:
       resources:
         limits: { memory: 192M }
-        replicas: 1
+      replicas: 1
 
   caddy:
     image: caddy:2.8-alpine
