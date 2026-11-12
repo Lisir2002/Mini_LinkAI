@@ -16,13 +16,13 @@ SSE = (
 
 
 def _adapter(**kw):
-    from app.services.adapter.openai_compat import OpenAICompatAdapter
+    from app.llm.adapter.openai_compat import OpenAICompatAdapter
 
     return OpenAICompatAdapter(base_url="https://api.test/v1", api_key="sk-test", **kw)
 
 
 async def test_stream_chat_parses_deltas_usage_and_done(block_external_http):
-    from app.services.adapter.base import UnifiedRequest
+    from app.llm.adapter.base import UnifiedRequest
 
     block_external_http.post("https://api.test/v1/chat/completions").respond(
         200, text=SSE, headers={"content-type": "text/event-stream"})
@@ -37,7 +37,7 @@ async def test_stream_chat_parses_deltas_usage_and_done(block_external_http):
 
 
 async def test_stream_requests_include_usage_option(block_external_http):
-    from app.services.adapter.base import UnifiedRequest
+    from app.llm.adapter.base import UnifiedRequest
 
     route = block_external_http.post("https://api.test/v1/chat/completions").respond(
         200, text=SSE, headers={"content-type": "text/event-stream"})
@@ -50,7 +50,7 @@ async def test_stream_requests_include_usage_option(block_external_http):
 
 
 async def test_param_whitelist_filters_unsupported(block_external_http):
-    from app.services.adapter.base import UnifiedRequest
+    from app.llm.adapter.base import UnifiedRequest
 
     route = block_external_http.post("https://api.test/v1/chat/completions").respond(
         200, text=SSE, headers={"content-type": "text/event-stream"})
@@ -88,7 +88,7 @@ async def test_list_models(block_external_http):
 
 
 async def test_missing_usage_falls_back_to_estimation(block_external_http):
-    from app.services.adapter.base import UnifiedRequest
+    from app.llm.adapter.base import UnifiedRequest
 
     no_usage = ('data: {"choices":[{"delta":{"content":"你好世界"}}]}\n\n'
                 'data: {"choices":[{"delta":{},"finish_reason":"stop"}]}\n\n'
@@ -103,7 +103,7 @@ async def test_missing_usage_falls_back_to_estimation(block_external_http):
 
 
 async def test_finish_reason_length_is_surfaced(block_external_http):
-    from app.services.adapter.base import UnifiedRequest
+    from app.llm.adapter.base import UnifiedRequest
 
     body = ('data: {"choices":[{"delta":{"content":"部分"}}]}\n\n'
             'data: {"choices":[{"delta":{},"finish_reason":"length"}],'
@@ -118,7 +118,7 @@ async def test_finish_reason_length_is_surfaced(block_external_http):
 
 
 async def test_upstream_401_raises_normalized_error(block_external_http):
-    from app.services.adapter.base import UnifiedRequest, UpstreamError
+    from app.llm.adapter.base import UnifiedRequest, UpstreamError
 
     block_external_http.post("https://api.test/v1/chat/completions").respond(401, json={})
     with pytest.raises(UpstreamError) as ei:
@@ -128,7 +128,7 @@ async def test_upstream_401_raises_normalized_error(block_external_http):
 
 
 async def test_read_timeout_raises_timeout_kind(block_external_http):
-    from app.services.adapter.base import UnifiedRequest, UpstreamError
+    from app.llm.adapter.base import UnifiedRequest, UpstreamError
 
     block_external_http.post("https://api.test/v1/chat/completions").mock(
         side_effect=httpx.ReadTimeout("too slow"))

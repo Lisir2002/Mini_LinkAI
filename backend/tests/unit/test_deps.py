@@ -6,7 +6,7 @@ from sqlalchemy import text
 
 
 async def test_get_db_yields_working_session_and_closes():
-    from app.deps import get_db
+    from app.interfaces.deps import get_db
 
     gen = get_db()
     session = await gen.__anext__()
@@ -16,7 +16,7 @@ async def test_get_db_yields_working_session_and_closes():
 
 
 def test_get_settings_returns_loaded_config():
-    from app.deps import get_settings
+    from app.interfaces.deps import get_settings
 
     s = get_settings()
     assert s.DATABASE_URL.startswith("postgresql+asyncpg://")
@@ -41,9 +41,9 @@ async def test_wait_for_dependencies_gives_up_after_attempts(monkeypatch):
 
 
 async def test_reset_singletons_rebuilds_clients():
+    from app.core.db import reset_singletons
     from app.core.startup import _probe_db, _probe_redis
-    from app.db import reset_singletons
-    from app.deps import get_redis
+    from app.interfaces.deps import get_redis
 
     r1 = get_redis()
     await reset_singletons()

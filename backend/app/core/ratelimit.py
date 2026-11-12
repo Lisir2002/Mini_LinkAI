@@ -5,7 +5,7 @@ import math
 import time
 import uuid
 
-from app.redis_client import get_redis
+from app.core.redis_client import get_redis
 
 
 async def check_rate_limit(key: str, *, limit: int, window_sec: int,

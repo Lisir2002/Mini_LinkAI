@@ -37,7 +37,7 @@ async def headers(spike_session):
 
 @pytest.fixture
 async def client():
-    from app.main import app
+    from app.interfaces.app import app
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),
                                  base_url="http://t", timeout=30) as c:
         yield c
@@ -54,7 +54,7 @@ async def _first_tick(client, headers, interval=1):
 
 
 def test_p95_calculation():
-    from app.services.live_metrics import p95
+    from app.stats.services.live_metrics import p95
 
     assert p95([]) is None
     assert p95([100]) == 100
@@ -102,7 +102,7 @@ async def test_metrics_recorded_after_ai_call(client, headers, spike_session,
 
 
 async def test_active_touch_updates_online(client, headers):
-    from app.services.live_metrics import touch_active
+    from app.stats.services.live_metrics import touch_active
 
     await touch_active(424242)
     tick = await _first_tick(client, headers["admin"])

@@ -24,7 +24,7 @@ async def _clean(spike_session, tmp_path, monkeypatch):
     await cleanup_all(spike_session)
     monkeypatch.setenv("UPLOAD_DIR", str(tmp_path / "uploads"))
     monkeypatch.setenv("FEATURE_FILE_UPLOAD", "true")
-    from app.config import settings
+    from app.core.config import settings
     monkeypatch.setattr(settings, "UPLOAD_DIR", str(tmp_path / "uploads"))
     monkeypatch.setattr(settings, "FEATURE_FILE_UPLOAD", True)
     yield
@@ -46,7 +46,7 @@ async def actors(spike_session):
 
 @pytest.fixture
 async def client():
-    from app.main import app
+    from app.interfaces.app import app
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),
                                  base_url="http://t", timeout=60) as c:
         yield c
@@ -101,7 +101,7 @@ async def test_content_permission(client, actors):
 
 
 async def test_feature_flag_off(client, actors, monkeypatch):
-    from app.config import settings
+    from app.core.config import settings
     monkeypatch.setattr(settings, "FEATURE_FILE_UPLOAD", False)
     r = await _upload(client, actors["h_owner"])
     assert r.status_code == 403 and r.json()["code"] == "FEATURE_DISABLED"

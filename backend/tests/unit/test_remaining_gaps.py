@@ -18,7 +18,7 @@ async def admin(spike_session):
 
 @pytest.fixture
 async def client():
-    from app.main import app
+    from app.interfaces.app import app
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),
                                  base_url="http://t", timeout=30) as c:
         yield c
@@ -94,7 +94,7 @@ async def test_model_patch_version_lock_and_delete_keeps_snapshot(client, admin,
 
 # ── US-040 ────────────────────────────────────────────────
 async def test_stale_pending_is_refunded(spike_session):
-    from app.tasks.pending_refund import refund_stale_pending
+    from app.stats.tasks.pending_refund import refund_stale_pending
     from tests.factories import make_user
 
     uid = await make_user(spike_session)
@@ -119,7 +119,7 @@ async def test_stale_pending_is_refunded(spike_session):
 
 
 async def test_recent_pending_is_not_touched(spike_session):
-    from app.tasks.pending_refund import refund_stale_pending
+    from app.stats.tasks.pending_refund import refund_stale_pending
     from tests.factories import make_user
 
     uid = await make_user(spike_session)
@@ -135,7 +135,7 @@ async def test_recent_pending_is_not_touched(spike_session):
 
 
 def test_scheduler_registers_jobs():
-    from app.scheduler import build_scheduler
+    from app.stats.scheduler import build_scheduler
 
     sch = build_scheduler()
     ids = {j.id for j in sch.get_jobs()}

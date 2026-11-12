@@ -5,7 +5,7 @@ import httpx
 
 
 async def test_health_reports_dependencies_and_latency():
-    from app.main import app
+    from app.interfaces.app import app
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),
                                  base_url="http://t") as c:
         r = await c.get("/api/health")
@@ -17,7 +17,7 @@ async def test_health_reports_dependencies_and_latency():
 
 
 async def test_health_503_names_failed_dependency(monkeypatch):
-    from app import main
+    from app.interfaces import app as main
 
     async def boom() -> None:
         raise OSError("redis down")

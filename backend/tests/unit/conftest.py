@@ -65,7 +65,7 @@ def _app_uses_spike_db():
     """单元测试期间把应用会话指向 spike 库，保证 API 与 fixture 读写同一个库。"""
     from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-    from app import db
+    from app.core import db
 
     original = db._factory
     engine = create_async_engine(SPIKE_URL, pool_size=3, max_overflow=2)

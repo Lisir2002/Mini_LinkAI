@@ -50,7 +50,7 @@ def test_full_ddl_executes_on_pg16(schema):
 
 def test_quota_no_oversell_under_20_concurrent(schema):
     """20 个并发各预扣 100，上限 1000：必须恰好 10 个成功，总量恰好 1000。"""
-    from app.services.quota_service import freeze
+    from app.llm.services.quota_service import freeze
 
     async def _run():
         conn = await asyncpg.connect(**DSN)

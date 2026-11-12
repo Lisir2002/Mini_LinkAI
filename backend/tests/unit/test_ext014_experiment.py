@@ -42,7 +42,7 @@ async def ctx(spike_session):
 
 @pytest.fixture
 async def client():
-    from app.main import app
+    from app.interfaces.app import app
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),
                                  base_url="http://t", timeout=30) as c:
         yield c
@@ -86,7 +86,7 @@ async def test_unbound_channel_rejected(client, ctx, spike_session):
 
 
 async def test_bucket_stability_and_ratio(spike_session, ctx):
-    from app.services.router_service import bucket_of
+    from app.llm.services.router_service import bucket_of
 
     for uid in (1, 42, 999, 123456):
         picks = {bucket_of(uid, 50) for _ in range(20)}
@@ -96,7 +96,7 @@ async def test_bucket_stability_and_ratio(spike_session, ctx):
 
 
 async def test_routing_uses_bucket_and_logs(client, ctx, spike_session, block_external_http):
-    from app.services.router_service import bucket_of
+    from app.llm.services.router_service import bucket_of
 
     eid = (await _mk(client, ctx, ratio=50)).json()["data"]["experiment_id"]
     bucket = bucket_of(ctx["uid"], 50)
@@ -133,13 +133,13 @@ async def test_end_experiment_falls_back(client, ctx, spike_session):
     eid = (await _mk(client, ctx)).json()["data"]["experiment_id"]
     r = await client.post(f"/api/admin/experiments/{eid}/end", headers=ctx["h"])
     assert r.status_code == 200
-    from app.services.router_service import pick_experiment
+    from app.llm.services.router_service import pick_experiment
     assert await pick_experiment(spike_session, ctx["mid"], ctx["uid"]) is None
 
 
 async def test_disabled_bucket_channel_falls_back(client, ctx, spike_session):
     await _mk(client, ctx, ratio=99)
-    from app.services.router_service import bucket_of, pick_experiment
+    from app.llm.services.router_service import bucket_of, pick_experiment
     bucket = bucket_of(ctx["uid"], 99)
     dead = ctx["ca"] if bucket == "a" else ctx["cb"]
     await spike_session.execute(text("UPDATE channels SET status='disabled' WHERE id=:i"),

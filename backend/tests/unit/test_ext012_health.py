@@ -28,7 +28,7 @@ async def admin_h(spike_session):
 
 @pytest.fixture
 async def client():
-    from app.main import app
+    from app.interfaces.app import app
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),
                                  base_url="http://t", timeout=30) as c:
         yield c
@@ -41,12 +41,12 @@ async def _set_webhook(spike_session, enabled=True):
         "ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value"),
         {"v": json.dumps({"url": WEBHOOK, "type": "dingtalk", "enabled": enabled})})
     await spike_session.commit()
-    from app.redis_client import get_redis
+    from app.core.redis_client import get_redis
     await get_redis().delete("settings:alert_webhook")
 
 
 async def test_sample_writes_row(spike_session, block_external_http):
-    from app.services.health_service import sample_all
+    from app.stats.services.health_service import sample_all
     from tests.factories import make_channel
 
     ch = await make_channel(spike_session, base_url="https://api.test/v1")
@@ -61,7 +61,7 @@ async def test_sample_writes_row(spike_session, block_external_http):
 
 
 async def test_cleanup_keeps_7_days(spike_session):
-    from app.services.health_service import cleanup_samples
+    from app.stats.services.health_service import cleanup_samples
     from tests.factories import make_channel
 
     ch = await make_channel(spike_session)
@@ -77,7 +77,7 @@ async def test_cleanup_keeps_7_days(spike_session):
 
 
 async def test_disable_alert_with_dedupe(spike_session, block_external_http):
-    from app.services.router_service import record_failure
+    from app.llm.services.router_service import record_failure
     from tests.factories import make_channel
 
     ch = await make_channel(spike_session)
@@ -94,7 +94,7 @@ async def test_disable_alert_with_dedupe(spike_session, block_external_http):
 
 
 async def test_no_alert_without_config(spike_session, block_external_http):
-    from app.services.router_service import record_failure
+    from app.llm.services.router_service import record_failure
     from tests.factories import make_channel
 
     ch = await make_channel(spike_session)
@@ -105,7 +105,7 @@ async def test_no_alert_without_config(spike_session, block_external_http):
 
 
 async def test_failure_rate_alert(spike_session, block_external_http):
-    from app.services.health_service import check_failure_rates
+    from app.stats.services.health_service import check_failure_rates
     from tests.factories import make_channel
 
     ch = await make_channel(spike_session)

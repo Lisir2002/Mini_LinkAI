@@ -46,7 +46,7 @@ def test_email_and_phone_are_masked(capsys):
 
 
 async def test_unhandled_exception_hides_stack_and_returns_trace_id():
-    from app.main import app
+    from app.interfaces.app import app
 
     async def boom() -> dict:
         raise RuntimeError("内部细节不应出现在响应里")

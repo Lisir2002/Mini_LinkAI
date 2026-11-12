@@ -6,7 +6,7 @@ from sqlalchemy import text
 
 
 async def test_audit_record_writes_row_without_secrets(spike_session):
-    from app.services.audit_service import record
+    from app.users.services.audit_service import record
     from tests.factories import make_user
 
     uid = await make_user(spike_session)
@@ -34,7 +34,7 @@ async def _make_code(session, max_uses: int = 1) -> str:
 
 
 async def test_invite_redeem_increments_used_count(spike_session):
-    from app.services.invite_service import redeem
+    from app.users.services.invite_service import redeem
 
     code = await _make_code(spike_session, max_uses=2)
     await redeem(spike_session, code)
@@ -44,14 +44,14 @@ async def test_invite_redeem_increments_used_count(spike_session):
 
 
 async def test_invite_invalid_code_raises(spike_session):
-    from app.services.invite_service import InviteCodeInvalid, redeem
+    from app.users.services.invite_service import InviteCodeInvalid, redeem
 
     with pytest.raises(InviteCodeInvalid):
         await redeem(spike_session, "RM-NOT-EXIST")
 
 
 async def test_invite_exhausted_raises(spike_session):
-    from app.services.invite_service import InviteCodeInvalid, redeem
+    from app.users.services.invite_service import InviteCodeInvalid, redeem
 
     code = await _make_code(spike_session, max_uses=1)
     await redeem(spike_session, code)

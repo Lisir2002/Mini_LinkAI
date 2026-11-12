@@ -9,8 +9,8 @@ import jwt as pyjwt
 from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatchError
 
-from app.config import settings
-from app.redis_client import get_redis
+from app.core.config import settings
+from app.core.redis_client import get_redis
 
 _hasher = PasswordHasher(time_cost=3, memory_cost=65536, parallelism=4)
 

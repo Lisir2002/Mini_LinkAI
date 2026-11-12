@@ -33,7 +33,7 @@ def _env() -> dict[str, str]:
 
 # ── 1. 异步路由 ────────────────────────────────────────────────
 async def test_async_route_returns_200() -> None:
-    from app.main import app
+    from app.interfaces.app import app
 
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://t") as c:
@@ -47,7 +47,7 @@ async def test_async_route_returns_200() -> None:
 
 # ── 2. asyncpg 真实查询 ────────────────────────────────────────
 async def test_asyncpg_select_one_via_app() -> None:
-    from app.main import app
+    from app.interfaces.app import app
 
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://t") as c:
@@ -58,7 +58,7 @@ async def test_asyncpg_select_one_via_app() -> None:
 
 # ── 3. Redis 读写 ─────────────────────────────────────────────
 async def test_redis_set_get_via_app() -> None:
-    from app.main import app
+    from app.interfaces.app import app
 
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://t") as c:
@@ -79,7 +79,7 @@ async def test_sse_streams_incrementally() -> None:
         port = s.getsockname()[1]
 
     proc = subprocess.Popen(
-        [sys.executable, "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1",
+        [sys.executable, "-m", "uvicorn", "app.interfaces.app:app", "--host", "127.0.0.1",
          "--port", str(port), "--log-level", "warning"],
         cwd=BACKEND_DIR, env=_env(),
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
@@ -116,7 +116,7 @@ async def test_sse_streams_incrementally() -> None:
 
 # ── 5. WebSocket 双向：ping/pong + 服务端主动推送 ────────────────
 def test_websocket_ping_pong_and_server_push() -> None:
-    from app.main import app
+    from app.interfaces.app import app
 
     with TestClient(app) as client:
         with client.websocket_connect("/ws/_smoke") as ws:

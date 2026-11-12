@@ -7,7 +7,7 @@ import pytest
 def test_missing_required_env_names_the_variable(monkeypatch):
     from pydantic import ValidationError
 
-    from app.config import Settings
+    from app.core.config import Settings
 
     monkeypatch.delenv("JWT_SECRET", raising=False)
     monkeypatch.setattr(Settings, "model_config",
@@ -18,7 +18,7 @@ def test_missing_required_env_names_the_variable(monkeypatch):
 
 
 def test_settings_expose_prd_business_defaults():
-    from app.config import Settings
+    from app.core.config import Settings
 
     s = Settings()
     assert s.DEFAULT_DAILY_MSG_LIMIT == 50

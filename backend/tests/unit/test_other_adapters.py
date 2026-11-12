@@ -24,13 +24,13 @@ GEM_SSE = (
 
 
 def _req():
-    from app.services.adapter.base import UnifiedRequest
+    from app.llm.adapter.base import UnifiedRequest
     return UnifiedRequest(model="m", messages=[
         {"role": "system", "content": "你是助手"}, {"role": "user", "content": "hi"}])
 
 
 async def test_anthropic_headers_and_body(block_external_http):
-    from app.services.adapter.anthropic import AnthropicAdapter
+    from app.llm.adapter.anthropic import AnthropicAdapter
 
     route = block_external_http.post("https://api.ant/v1/messages").respond(
         200, text=ANT_SSE, headers={"content-type": "text/event-stream"})
@@ -50,7 +50,7 @@ async def test_anthropic_headers_and_body(block_external_http):
 
 
 async def test_gemini_headers_body_and_no_done_marker(block_external_http):
-    from app.services.adapter.gemini import GeminiAdapter
+    from app.llm.adapter.gemini import GeminiAdapter
 
     route = block_external_http.post(
         "https://api.gem/v1beta/models/m:streamGenerateContent").respond(
@@ -71,10 +71,10 @@ async def test_gemini_headers_body_and_no_done_marker(block_external_http):
 
 
 @pytest.mark.parametrize("proto,cls_path,status,kind", [
-    ("anthropic", "app.services.adapter.anthropic:AnthropicAdapter", 401, "auth"),
-    ("anthropic", "app.services.adapter.anthropic:AnthropicAdapter", 429, "rate_limit"),
-    ("gemini", "app.services.adapter.gemini:GeminiAdapter", 403, "auth"),
-    ("gemini", "app.services.adapter.gemini:GeminiAdapter", 400, "bad_param"),
+    ("anthropic", "app.llm.adapter.anthropic:AnthropicAdapter", 401, "auth"),
+    ("anthropic", "app.llm.adapter.anthropic:AnthropicAdapter", 429, "rate_limit"),
+    ("gemini", "app.llm.adapter.gemini:GeminiAdapter", 403, "auth"),
+    ("gemini", "app.llm.adapter.gemini:GeminiAdapter", 400, "bad_param"),
 ])
 def test_other_protocol_error_mapping(proto, cls_path, status, kind):
     import importlib

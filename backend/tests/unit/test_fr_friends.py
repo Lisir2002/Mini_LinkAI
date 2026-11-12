@@ -32,7 +32,7 @@ async def actors(spike_session):
 
 @pytest.fixture
 async def client():
-    from app.main import app
+    from app.interfaces.app import app
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),
                                  base_url="http://t", timeout=30) as c:
         yield c
@@ -153,8 +153,8 @@ async def test_dm_attachment_ownership(client, spike_session, actors):
     await _befriend(client, actors)
     import tempfile
 
-    from app.config import settings
-    from app.services.upload_service import save_upload
+    from app.core.config import settings
+    from app.files.services.upload_service import save_upload
     with tempfile.TemporaryDirectory() as td:
         settings.UPLOAD_DIR = td
         settings.FEATURE_FILE_UPLOAD = True

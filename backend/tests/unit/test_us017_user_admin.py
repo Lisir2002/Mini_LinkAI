@@ -31,7 +31,7 @@ async def actors(spike_session):
 
 @pytest.fixture
 async def client():
-    from app.main import app
+    from app.interfaces.app import app
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),
                                  base_url="http://t", timeout=30) as c:
         yield c
@@ -165,7 +165,7 @@ async def test_reset_revokes_all_tokens_including_same_second(
     import json as _json
     import time
 
-    from app.redis_client import get_redis
+    from app.core.redis_client import get_redis
 
     monkeypatch.setattr(time, "time", lambda: 1_000_000_000.0)
     r = await client.post(f"/api/admin/users/{actors['victim']}/reset-password",

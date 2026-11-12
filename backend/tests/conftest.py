@@ -11,8 +11,8 @@ import pytest
 @pytest.fixture(autouse=True)
 async def clean_state():
     yield
-    from app.db import reset_singletons
-    from app.redis_client import get_redis
+    from app.core.db import reset_singletons
+    from app.core.redis_client import get_redis
 
     try:
         await get_redis().flushdb()

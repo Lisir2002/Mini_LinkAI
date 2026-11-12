@@ -5,7 +5,7 @@ import pytest
 
 
 def test_registry_resolves_three_protocols():
-    from app.services.adapter.registry import get_adapter
+    from app.llm.adapter.registry import get_adapter
 
     for proto in ("openai_compatible", "anthropic", "gemini"):
         cls = get_adapter(proto)
@@ -13,14 +13,14 @@ def test_registry_resolves_three_protocols():
 
 
 def test_unknown_protocol_raises():
-    from app.services.adapter.registry import UnknownProtocol, get_adapter
+    from app.llm.adapter.registry import UnknownProtocol, get_adapter
 
     with pytest.raises(UnknownProtocol):
         get_adapter("no-such-protocol")
 
 
 def test_unified_request_and_stream_event_shapes():
-    from app.services.adapter.base import StreamEvent, UnifiedRequest
+    from app.llm.adapter.base import StreamEvent, UnifiedRequest
 
     req = UnifiedRequest(model="smart", messages=[{"role": "user", "content": "hi"}])
     assert req.stream is True
@@ -29,7 +29,7 @@ def test_unified_request_and_stream_event_shapes():
 
 
 def test_abstract_adapter_cannot_be_instantiated():
-    from app.services.adapter.base import ProtocolAdapter
+    from app.llm.adapter.base import ProtocolAdapter
 
     with pytest.raises(TypeError):
         ProtocolAdapter(base_url="https://x", api_key="k")  # type: ignore[abstract]

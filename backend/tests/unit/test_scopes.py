@@ -14,7 +14,7 @@ async def _u(session, role="member"):
 
 
 async def test_conversation_scope_owner_ok_others_404(spike_session):
-    from app.deps import scope_conversation
+    from app.interfaces.deps import scope_conversation
     from tests.factories import make_conversation
 
     a, b = await _u(spike_session), await _u(spike_session)
@@ -26,7 +26,7 @@ async def test_conversation_scope_owner_ok_others_404(spike_session):
 
 
 async def test_room_scope_member_ok_outsider_403_archived_404(spike_session):
-    from app.deps import scope_room
+    from app.interfaces.deps import scope_room
     from tests.factories import add_member, make_room
 
     owner, outsider = await _u(spike_session), await _u(spike_session)
@@ -45,7 +45,7 @@ async def test_room_scope_member_ok_outsider_403_archived_404(spike_session):
 
 
 async def test_room_perm_hierarchy(spike_session):
-    from app.deps import room_perm
+    from app.interfaces.deps import room_perm
     from tests.factories import add_member, make_room
 
     owner, mgr, mem, outsider = [await _u(spike_session) for _ in range(4)]
@@ -61,7 +61,7 @@ async def test_room_perm_hierarchy(spike_session):
 
 
 async def test_usage_scope_grading(spike_session):
-    from app.deps import scope_usage
+    from app.interfaces.deps import scope_usage
     from tests.factories import add_member, make_room
 
     owner, mgr, mem = [await _u(spike_session) for _ in range(3)]
@@ -76,7 +76,7 @@ async def test_usage_scope_grading(spike_session):
 
 
 async def test_admin_cannot_ban_self_or_last_admin(spike_session):
-    from app.deps import guard_admin_target
+    from app.interfaces.deps import guard_admin_target
 
     admin = await _u(spike_session, role="admin")
     with pytest.raises(AppError) as ei:

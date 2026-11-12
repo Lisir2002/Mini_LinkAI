@@ -20,7 +20,7 @@ async def _clean(spike_session, tmp_path, monkeypatch):
     from tests.factories import cleanup_all
 
     await cleanup_all(spike_session)
-    from app.config import settings
+    from app.core.config import settings
     monkeypatch.setattr(settings, "UPLOAD_DIR", str(tmp_path / "up"))
     monkeypatch.setattr(settings, "FEATURE_FILE_UPLOAD", True)
     yield
@@ -43,7 +43,7 @@ async def actors(spike_session):
 
 @pytest.fixture
 async def client():
-    from app.main import app
+    from app.interfaces.app import app
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),
                                  base_url="http://t", timeout=30) as c:
         yield c
@@ -179,7 +179,7 @@ async def test_mutual_requests_no_duplicate_friends(client, spike_session, actor
 
 async def test_unfriend_notifies_other(client, actors, monkeypatch):
     await _befriend(client, actors)
-    from app.services import dm_bus
+    from app.users.services import dm_bus
     calls = []
     orig = dm_bus.publish
 

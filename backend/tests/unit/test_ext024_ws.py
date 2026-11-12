@@ -43,7 +43,7 @@ def server():
     env["CHANNEL_CIPHER_KEY"] = FIXED_KEY
     env["PYTHONPATH"] = str(BACKEND)
     proc = subprocess.Popen(
-        [sys.executable, "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1",
+        [sys.executable, "-m", "uvicorn", "app.interfaces.app:app", "--host", "127.0.0.1",
          "--port", str(PORT)],
         cwd=str(BACKEND), env=env,
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

@@ -24,7 +24,7 @@ async def _model_with(spike_session, name, cids):
 
 
 async def test_highest_priority_wins(spike_session):
-    from app.services.router_service import select_channel
+    from app.llm.services.router_service import select_channel
 
     lo = await _mk(spike_session, "lo", priority=0)
     hi = await _mk(spike_session, "hi", priority=10)
@@ -34,7 +34,7 @@ async def test_highest_priority_wins(spike_session):
 
 
 async def test_cooldown_and_disabled_are_skipped(spike_session):
-    from app.services.router_service import select_channel
+    from app.llm.services.router_service import select_channel
 
     bad = await _mk(spike_session, "bad", priority=10)
     good = await _mk(spike_session, "good", priority=0)
@@ -46,14 +46,14 @@ async def test_cooldown_and_disabled_are_skipped(spike_session):
 
 
 async def test_no_channel_raises(spike_session):
-    from app.services.router_service import NoChannelAvailable, select_channel
+    from app.llm.services.router_service import NoChannelAvailable, select_channel
 
     with pytest.raises(NoChannelAvailable):
         await select_channel(spike_session, "not-exist")
 
 
 async def test_three_failures_auto_disable(spike_session):
-    from app.services.router_service import record_failure
+    from app.llm.services.router_service import record_failure
 
     cid = await _mk(spike_session, "flaky")
     for _ in range(3):
@@ -66,7 +66,7 @@ async def test_three_failures_auto_disable(spike_session):
 
 
 async def test_auth_failure_disables_immediately(spike_session):
-    from app.services.router_service import record_failure
+    from app.llm.services.router_service import record_failure
 
     cid = await _mk(spike_session, "badauth")
     await record_failure(spike_session, cid, kind="auth")

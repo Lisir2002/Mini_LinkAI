@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
-from app.config import settings
+from app.core.config import settings
 
 
 def _tz() -> ZoneInfo:

@@ -10,7 +10,7 @@ from sqlalchemy import text
 
 @pytest.fixture
 async def app_session():
-    from app.db import get_session
+    from app.core.db import get_session
 
     async with get_session() as s:
         yield s
@@ -18,7 +18,7 @@ async def app_session():
 
 @pytest.fixture
 async def client():
-    from app.main import app
+    from app.interfaces.app import app
 
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://t") as c:
@@ -149,7 +149,7 @@ async def test_password_change_clears_flag_and_allows_access(client, app_session
 
 
 async def test_register_closed_mode_rejected(client, app_session, monkeypatch):
-    from app.config import settings
+    from app.core.config import settings
 
     monkeypatch.setattr(settings, "REGISTRATION_MODE", "closed")
     code = await _invite(app_session)

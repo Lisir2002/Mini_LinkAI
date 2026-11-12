@@ -44,7 +44,7 @@ async def ctx(spike_session):
 
 @pytest.fixture
 async def client():
-    from app.main import app
+    from app.interfaces.app import app
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),
                                  base_url="http://t", timeout=30) as c:
         yield c
@@ -132,7 +132,7 @@ async def test_schema_violation_counts_as_invalid(client, spike_session, ctx,
 
 
 async def test_table_and_code_constraints(client, spike_session, ctx, block_external_http):
-    from app.redis_client import get_redis
+    from app.core.redis_client import get_redis
     for mode, kw in (("table", "表格"), ("code", "代码")):
         await get_redis().delete(f"room:{ctx['rid']}:ai_cd")  # 冷却与本测试意图正交
         await _set_mode(spike_session, ctx["rid"], mode)

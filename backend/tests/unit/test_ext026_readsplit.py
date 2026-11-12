@@ -16,8 +16,8 @@ async def _clean(spike_session, monkeypatch):
     from tests.factories import cleanup_all
 
     await cleanup_all(spike_session)
-    from app import db
-    from app.config import settings
+    from app.core import db
+    from app.core.config import settings
     monkeypatch.setattr(settings, "READ_REPLICA_URL", "")
     db.reset_read_factory()
     yield
@@ -36,15 +36,15 @@ async def admin_h(spike_session):
 
 @pytest.fixture
 async def client():
-    from app.main import app
+    from app.interfaces.app import app
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),
                                  base_url="http://t", timeout=30) as c:
         yield c
 
 
 async def test_read_uses_replica_when_configured(spike_session, monkeypatch):
-    from app import db
-    from app.config import settings
+    from app.core import db
+    from app.core.config import settings
 
     monkeypatch.setattr(settings, "READ_REPLICA_URL", SPIKE)
 
@@ -56,8 +56,8 @@ async def test_read_uses_replica_when_configured(spike_session, monkeypatch):
 
 
 async def test_read_fallback_when_replica_down(spike_session, monkeypatch):
-    from app import db
-    from app.config import settings
+    from app.core import db
+    from app.core.config import settings
 
     monkeypatch.setattr(settings, "READ_REPLICA_URL",
                         "postgresql+asyncpg://aicr:spikepass@127.0.0.1:59999/nodb")
@@ -69,7 +69,7 @@ async def test_read_fallback_when_replica_down(spike_session, monkeypatch):
 
 
 async def test_no_replica_uses_primary(spike_session):
-    from app import db
+    from app.core import db
 
     async def q(s):
         return (await s.execute(text("SELECT 7"))).scalar_one()
@@ -89,7 +89,7 @@ async def _seed_usage(spike_session, day: date, user_id: int, n: int, tokens: in
 
 
 async def test_precompute_matches_realtime(spike_session):
-    from app.tasks.stats_precompute import precompute_stats
+    from app.stats.tasks.stats_precompute import precompute_stats
     from tests.factories import make_user
 
     u1 = await make_user(spike_session)
@@ -115,7 +115,7 @@ async def test_precompute_matches_realtime(spike_session):
 
 
 async def test_precompute_idempotent(spike_session):
-    from app.tasks.stats_precompute import precompute_stats
+    from app.stats.tasks.stats_precompute import precompute_stats
     from tests.factories import make_user
 
     u = await make_user(spike_session)
@@ -155,7 +155,7 @@ async def test_stats_member_forbidden(client, spike_session):
 
 async def test_feedback_stats_via_read_path(client, spike_session, admin_h, monkeypatch):
     """副本配置下满意度统计仍正确（走 run_read）。"""
-    from app.config import settings
+    from app.core.config import settings
 
     monkeypatch.setattr(settings, "READ_REPLICA_URL", SPIKE)
     r = await client.get("/api/admin/stats/feedback", headers=admin_h)

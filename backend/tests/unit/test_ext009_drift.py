@@ -23,14 +23,14 @@ async def _clean(spike_session):
 
 @pytest.fixture
 async def client():
-    from app.main import app
+    from app.interfaces.app import app
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),
                                  base_url="http://t", timeout=30) as c:
         yield c
 
 
 async def test_ratio_stays_one_before_min_samples(spike_session):
-    from app.services.drift_service import apply_drift, update_drift
+    from app.llm.services.drift_service import apply_drift, update_drift
     from tests.factories import make_model
 
     mid = await make_model(spike_session)
@@ -44,7 +44,7 @@ async def test_ratio_stays_one_before_min_samples(spike_session):
 
 
 async def test_ratio_converges_and_clamps(spike_session):
-    from app.services.drift_service import apply_drift, update_drift
+    from app.llm.services.drift_service import apply_drift, update_drift
     from tests.factories import make_model
 
     mid = await make_model(spike_session)
@@ -64,7 +64,7 @@ async def test_ratio_converges_and_clamps(spike_session):
 
 
 async def test_zero_estimate_skipped(spike_session):
-    from app.services.drift_service import update_drift
+    from app.llm.services.drift_service import update_drift
     from tests.factories import make_model
 
     mid = await make_model(spike_session)
@@ -75,7 +75,7 @@ async def test_zero_estimate_skipped(spike_session):
 
 
 async def test_no_drift_row_returns_original(spike_session):
-    from app.services.drift_service import apply_drift
+    from app.llm.services.drift_service import apply_drift
     from tests.factories import make_model
 
     mid = await make_model(spike_session)

@@ -5,8 +5,8 @@ import asyncio
 
 from sqlalchemy import text
 
-from app.db import get_session
-from app.redis_client import get_redis
+from app.core.db import get_session
+from app.core.redis_client import get_redis
 
 
 class DependencyNotReady(RuntimeError):

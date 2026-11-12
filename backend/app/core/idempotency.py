@@ -6,7 +6,7 @@ import json
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-from app.redis_client import get_redis
+from app.core.redis_client import get_redis
 
 
 class IdempotencyTimeout(Exception):

@@ -39,7 +39,7 @@ async def admin_headers(spike_session):
 
 @pytest.fixture
 async def client():
-    from app.main import app
+    from app.interfaces.app import app
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),
                                  base_url="http://t", timeout=30) as c:
         yield c
@@ -147,7 +147,7 @@ async def test_first_call_of_day_also_respects_limit(spike_session):
     """回归：当天首次调用走纯 INSERT 分支，同样必须受限额约束。"""
     from datetime import date
 
-    from app.services.quota_service import freeze_tokens
+    from app.llm.services.quota_service import freeze_tokens
     from tests.factories import make_user
 
     uid = await make_user(spike_session)
