@@ -1,0 +1,32 @@
+/* 设计令牌：直接取自原型 v6，保证视觉一致 */
+:root,
+[data-theme="light"] {
+      --bg: #F6F7F8; --surface: #FFFFFF; --surface-2: #F1F2F4; --fill: #EBEDF0;
+      --line: #E7E9EC; --line-2: #D5D8DC;
+      --t1: #101114; --t2: #3E434B; --t3: #666C75; --t4: #6E747C;
+      --accent: #2E5BFF; --accent-soft: #EBF0FF; --accent-hover: #2449D6;
+      --ok: #14A44D; --ok-soft: #E6F6ED;
+      --warn: #B45309; --warn-soft: #FBF0DF; --warn-strong: #D97706; --warn-line: #F0DCB4;
+      --err: #D92D20; --err-soft: #FDECEA;
+      --mask: rgba(16,17,20,0.45); --toast-bg: rgba(16,17,20,0.85);
+      --shadow: 0 1px 2px rgba(16,17,20,0.04);
+    }
+
+[data-theme="dark"] {
+      --bg: #0B0C0E; --surface: #16181C; --surface-2: #1E2126; --fill: #26292F;
+      --line: #26292F; --line-2: #3A3E46;
+      --t1: #F2F3F5; --t2: #D3D7DD; --t3: #9AA0A8; --t4: #868C94;
+      --accent: #5B7CFF; --accent-soft: rgba(91,124,255,0.16); --accent-hover: #7C96FF;
+      --ok: #3CCB7A; --ok-soft: rgba(60,203,122,0.14);
+      --warn: #F0B429; --warn-soft: rgba(240,180,41,0.12); --warn-strong: #F0B429; --warn-line: rgba(240,180,41,0.32);
+      --err: #F87171; --err-soft: rgba(248,113,113,0.13);
+      --mask: rgba(0,0,0,0.65); --toast-bg: rgba(40,42,48,0.95);
+      --shadow: 0 1px 2px rgba(0,0,0,0.4);
+    }
+
+:root {
+      --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+      --r-sm: 6px; --r-md: 10px; --r-lg: 14px;
+      --fs-cap: 11px; --fs-sm: 12px; --fs-md: 13px; --fs-lg: 15px; --fs-xl: 17px;
+      color-scheme: light;
+}
