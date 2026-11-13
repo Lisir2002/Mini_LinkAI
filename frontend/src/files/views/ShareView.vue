@@ -53,7 +53,7 @@ function who(m: SharedMessage) {
       </div>
       <p v-if="!messages.length" class="state">暂无消息</p>
     </main>
-    <footer class="foot">由 AI 聊天室生成 · 内容仅代表分享者会话记录</footer>
+    <footer class="foot">由 LinkAI生成 · 内容仅代表分享者会话记录</footer>
   </div>
 </template>
 

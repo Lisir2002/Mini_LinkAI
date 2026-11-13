@@ -1,10 +1,10 @@
-# CLAUDE.md — AI 聊天室
+# CLAUDE.md — LinkAI
 
 多房间 AI 聊天平台：管理员配模型渠道，成员邀请码注册后单聊 AI，或在多人房间里 @AI 讨论。
 
 ## 唯一真相源
 
-需求、数据模型、接口契约、业务规则、异常文案、开发陷阱全部在 **`docs/AI聊天室-PRD-v1.md`**，本文档不重复其内容，冲突以 PRD 为准。视觉与交互以 `prototype-html/prototype-ai-chatroom-v6.html`（App）、`prototype-room-flow-v2.html`（房间流程与状态机）为准。
+需求、数据模型、接口契约、业务规则、异常文案、开发陷阱全部在 **`docs/LinkAI-PRD-v1.md`**，本文档不重复其内容，冲突以 PRD 为准。视觉与交互以 `prototype-html/prototype-ai-chatroom-v6.html`（App）、`prototype-room-flow-v2.html`（房间流程与状态机）为准。
 
 ## 技术栈
 

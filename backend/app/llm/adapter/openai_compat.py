@@ -16,6 +16,7 @@ from app.llm.adapter.base import (
     UpstreamError,
     error_kind,
     iter_sse,
+    split_system,
 )
 
 
@@ -48,6 +49,10 @@ class OpenAICompatAdapter(ProtocolAdapter):
         return UpstreamError(error_kind(status), str(body)[:200], status)
 
     async def stream_chat(self, req: UnifiedRequest) -> AsyncIterator[StreamEvent]:
+        if self.options.get("responses_api"):
+            async for ev in self._stream_responses(req):
+                yield ev
+            return
         body: dict[str, Any] = {
             "model": req.model, "messages": req.messages, "stream": True,
             # 不带此选项，流式响应里拿不到 usage，配额就无法结算
@@ -55,6 +60,8 @@ class OpenAICompatAdapter(ProtocolAdapter):
         }
         body.update(self.pick({"temperature": req.temperature, "top_p": req.top_p,
                                "max_tokens": req.max_tokens, "stop": req.stop}))
+        if self.options.get("prompt_cache_key") and req.cache_key:
+            body["prompt_cache_key"] = req.cache_key
         url = f"{self.base_url}/chat/completions"
         usage: dict[str, Any] | None = None
         finish_reason: str | None = None
@@ -93,13 +100,73 @@ class OpenAICompatAdapter(ProtocolAdapter):
         yield StreamEvent("usage", usage)
         yield StreamEvent("done", {"finish_reason": finish_reason})
 
+    async def _stream_responses(self, req: UnifiedRequest) -> AsyncIterator[StreamEvent]:
+        """Responses API（/v1/responses）：语义化事件流，input/instructions 结构。"""
+        system, rest = split_system(req.messages)
+        input_items = [{"role": m["role"],
+                        "content": [{"type": "input_text",
+                                     "text": str(m.get("content") or "")}]}
+                       for m in rest]
+        body: dict[str, Any] = {"model": req.model, "input": input_items, "stream": True}
+        if system:
+            body["instructions"] = system
+        body.update(self.pick({"temperature": req.temperature, "top_p": req.top_p}))
+        if req.max_tokens:
+            body["max_output_tokens"] = req.max_tokens
+        if self.options.get("prompt_cache_key") and req.cache_key:
+            body["prompt_cache_key"] = req.cache_key
+        url = f"{self.base_url}/responses"
+        usage: dict[str, Any] | None = None
+        collected: list[str] = []
+        timeout = httpx.Timeout(self.total_timeout, connect=5.0,
+                                read=self.first_token_timeout)
+        try:
+            async with httpx.AsyncClient(timeout=timeout) as c:
+                async with c.stream("POST", url, json=body,
+                                    headers=self.build_headers(self.api_key)) as r:
+                    if r.status_code != 200:
+                        await r.aread()
+                        raise self.normalize_error(r.status_code, {})
+                    async for _ev, data in iter_sse(r):
+                        if data == "[DONE]":
+                            break
+                        obj = json.loads(data)
+                        t = obj.get("type")
+                        if t == "response.output_text.delta":
+                            piece = obj.get("delta") or ""
+                            if piece:
+                                collected.append(piece)
+                                yield StreamEvent("delta", {"content": piece})
+                        elif t == "response.completed":
+                            u = (obj.get("response") or {}).get("usage") or {}
+                            usage = {"prompt_tokens": u.get("input_tokens", 0),
+                                     "completion_tokens": u.get("output_tokens", 0),
+                                     "total_tokens": u.get("total_tokens", 0),
+                                     "estimated": False}
+                        elif t in ("response.failed", "response.error", "response.incomplete"):
+                            raise UpstreamError(
+                                "upstream", json.dumps(obj, ensure_ascii=False)[:200])
+        except httpx.TimeoutException as exc:
+            raise UpstreamError("timeout", str(exc)[:120]) from exc
+        if usage is None:
+            usage = estimate_usage(req.messages, "".join(collected))
+        yield StreamEvent("usage", usage)
+        yield StreamEvent("done", {"finish_reason": "stop"})
+
     async def test_connectivity(self) -> TestResult:
         t0 = time.perf_counter()
         try:
             async with httpx.AsyncClient(timeout=15.0) as c:
-                r = await c.post(f"{self.base_url}/chat/completions",
+                if self.options.get("responses_api"):
+                    r = await c.post(
+                        f"{self.base_url}/responses",
+                        headers=self.build_headers(self.api_key),
+                        json={"model": self.probe_model, "max_output_tokens": 8,
+                              "input": "ping"})
+                else:
+                    r = await c.post(f"{self.base_url}/chat/completions",
                                  headers=self.build_headers(self.api_key),
-                                 json={"model": "probe", "max_tokens": 8,
+                                 json={"model": self.probe_model, "max_tokens": 8,
                                        "messages": [{"role": "user", "content": "ping"}]})
             ms = int((time.perf_counter() - t0) * 1000)
             if r.status_code == 200:

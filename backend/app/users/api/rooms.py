@@ -363,7 +363,8 @@ async def room_ai(rid: int, body: RoomMsgIn, user: dict[str, Any] = User) -> Str
                 try:
                     async for ev in build_adapter(chan).stream_chat(UnifiedRequest(
                             model=chan["upstream_model"], messages=messages,
-                            max_tokens=int(room["max_output_tokens"]))):
+                            max_tokens=int(room["max_output_tokens"]),
+                            cache_key=f"room:{rid}")):
                         if ev.type == "delta":
                             if not first:
                                 first = int((time.perf_counter() - t0) * 1000)

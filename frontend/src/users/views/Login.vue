@@ -70,7 +70,7 @@ async function submit() {
     <div class="brand">
       <div class="logo"><AppIcon name="brand-chat" /></div>
       <div>
-        <div class="brand-text">AI 聊天室</div>
+        <div class="brand-text">LinkAI</div>
         <div class="brand-sub">ChatRoom · 多模型 · 多房间</div>
       </div>
     </div>

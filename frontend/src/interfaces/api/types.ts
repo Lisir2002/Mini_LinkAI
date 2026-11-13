@@ -4,6 +4,8 @@ export interface Channel {
   status: 'enabled' | 'disabled' | 'auto_disabled'; fail_count: number
   cooldown_until: string | null; last_check_at: string | null; last_latency_ms: number | null
   discovered_models: string[] | { id: string }[]; version: number
+  auto_complete_url?: boolean
+  options?: Record<string, boolean>
 }
 export interface Model {
   id: number; public_name: string; display_name: string; tier: string; context_limit: number

@@ -1,9 +1,9 @@
-name: ai-chatroom
+name: linkai
 
 services:
   postgres:
     image: postgres:16.4-alpine
-    container_name: aicr-postgres
+    container_name: linkai-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -32,7 +32,7 @@ services:
 
   redis:
     image: redis:7.2-alpine
-    container_name: aicr-redis
+    container_name: linkai-redis
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes", "--maxmemory", "128mb",
               "--maxmemory-policy", "noeviction", "--requirepass", "${REDIS_PASSWORD}"]
@@ -52,7 +52,7 @@ services:
     build:
       context: ..
       dockerfile: deploy/Dockerfile.backend
-    container_name: aicr-app
+    container_name: linkai-app
     restart: unless-stopped
     env_file: ../.env
     environment:
@@ -80,7 +80,7 @@ services:
     build:
       context: ..
       dockerfile: deploy/Dockerfile.backend
-    container_name: aicr-scheduler
+    container_name: linkai-scheduler
     restart: unless-stopped
     env_file: ../.env
     environment:
@@ -97,7 +97,7 @@ services:
 
   caddy:
     image: caddy:2.8-alpine
-    container_name: aicr-caddy
+    container_name: linkai-caddy
     restart: unless-stopped
     ports: ["80:80", "443:443"]
     volumes:

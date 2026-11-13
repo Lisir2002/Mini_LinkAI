@@ -69,9 +69,9 @@ async def main() -> int:
         if admin_id is None:
             admin_id = await conn.fetchval(
                 "INSERT INTO users (email,password_hash,nickname,role,must_change_password) "
-                "VALUES ($1,$2,'管理员','admin',true) RETURNING id",
+                "VALUES ($1,$2,'管理员','admin',false) RETURNING id",
                 admin_email, hash_password(admin_password))
-            print(f"已创建管理员 {admin_email}（首次登录必须改密）")
+            print(f"已创建管理员 {admin_email}（请尽快在个人中心修改初始密码）")
         else:
             print(f"管理员 {admin_email} 已存在，跳过")
 

@@ -57,6 +57,9 @@ CREATE TABLE channels (
                          '["temperature","top_p","max_tokens","stream"]',
   weight                 INT NOT NULL DEFAULT 100 CHECK (weight >= 0),
   priority               INT NOT NULL DEFAULT 0,
+  -- LinkAI 渠道特性：Base URL 自动补全开关 + 协议特性位（迁移 0019 同步）
+  auto_complete_url      BOOLEAN NOT NULL DEFAULT true,
+  options                JSONB NOT NULL DEFAULT '{}'::jsonb,
   status                 VARCHAR(16) NOT NULL DEFAULT 'enabled'
                          CHECK (status IN ('enabled','disabled','auto_disabled')),
   fail_count             INT NOT NULL DEFAULT 0,

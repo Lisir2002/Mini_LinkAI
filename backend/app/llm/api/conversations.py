@@ -263,7 +263,8 @@ async def ai_completions(cid: int, body: AskIn,
 
             adapter = build_adapter(chan)
             req = UnifiedRequest(model=chan["upstream_model"], messages=messages,
-                                 max_tokens=int(model["max_output_tokens"]))
+                                 max_tokens=int(model["max_output_tokens"]),
+                                 cache_key=f"conv:{cid}")
             pieces: list[str] = []
             usage: dict[str, Any] | None = None
             t0 = time.perf_counter()

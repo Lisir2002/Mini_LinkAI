@@ -37,7 +37,7 @@ async def test_seed_creates_admin_and_defaults(spike_session):
     assert r.returncode == 0, r.stderr[-1500:]
     row = (await spike_session.execute(
         text("SELECT role, must_change_password FROM users WHERE email='admin@example.com'"))).one()
-    assert row.role == "admin" and row.must_change_password is True
+    assert row.role == "admin" and row.must_change_password is False
     n = (await spike_session.execute(
         text("SELECT count(*) FROM models WHERE public_name IN ('smart','fast')"))).scalar_one()
     assert n == 2

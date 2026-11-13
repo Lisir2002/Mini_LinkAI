@@ -121,7 +121,7 @@ onMounted(load)
     </div>
 
     <button class="logout" @click="logout">退出登录</button>
-    <p class="foot">AI 聊天室 · 内容由 AI 生成，仅供参考</p>
+    <p class="foot">LinkAI · 内容由 AI 生成，仅供参考</p>
     <div class="pad-bottom" />
     <TabBar active="me" />
   </div>

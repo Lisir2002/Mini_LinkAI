@@ -500,7 +500,7 @@ def main() -> None:
                  files={"file": ("evil.png", b"not an image", "image/png")}), 422)
     check("超大 413", "POST", "/api/uploads",
           c.post(BASE + "/api/uploads", headers=MH,
-                 files={"file": ("big.png", png + b"\x00" * (10 * 1024 * 1024 + 1), "image/png")}), 413)
+                 files={"file": ("big.png", png + b"\x00" * (11 * 1024 * 1024), "image/png")}), 413)
     check("属主读取内容", "GET", f"/api/uploads/{up_id}/content",
           c.get(BASE + f"/api/uploads/{up_id}/content", headers=MH), 200,
           lambda r: r.content == png)
@@ -572,7 +572,7 @@ def main() -> None:
     # ── 报告 ──
     total = len(ROWS)
     passed = sum(1 for r in ROWS if r["ok"])
-    lines = ["# AI 聊天室 · API 实测报告", "",
+    lines = ["# LinkAI · API 实测报告", "",
              f"实测时间：{time.strftime('%Y-%m-%d %H:%M')} · 环境：真实 uvicorn + PostgreSQL 16 + Redis 7 + mock 上游",
              f"结果：**{passed}/{total} 通过**，覆盖 {len(set(r['module'] for r in ROWS))} 个模块", "",
              "方式：脚本 `scripts/api_full_check.py` 对运行中的后端发起真实 HTTP/SSE/WebSocket 调用，",

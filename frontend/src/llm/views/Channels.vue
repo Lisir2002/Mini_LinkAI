@@ -88,7 +88,34 @@ const ALL_PARAMS = ['temperature', 'top_p', 'max_tokens', 'stream', 'stop',
 const form = reactive({
   name: '', type: 'openai_compatible', base_url: '', api_key: '', preset: '',
   weight: 100, priority: 0, supported_params: [] as string[],
+  auto_complete_url: true, options: {} as Record<string, boolean>,
 })
+
+// 各协议的高级特性开关：默认全关，按上游能力手动开启
+const FEATURE_DEFS: Record<string, { key: string; label: string; hint: string; beta?: boolean }[]> = {
+  openai_compatible: [
+    { key: 'responses_api', label: 'Responses API（新版协议）',
+      hint: '改走 /v1/responses 端点：语义化事件流、instructions 与输入条目结构。上游未提供该端点时请保持关闭',
+      beta: true },
+    { key: 'prompt_cache_key', label: '提示词缓存键',
+      hint: '为每次请求携带 prompt_cache_key（按会话/房间生成），让同一对话的请求路由到同一缓存，命中部分按折扣计费' },
+  ],
+  anthropic: [
+    { key: 'prompt_cache', label: '提示词缓存断点（cache_control）',
+      hint: '自动在系统提示词与最后一条消息放置 ephemeral 断点：多轮对话重复前缀按约 1 折计费、首字更快；前缀需约 1024 token 以上才生效，上游不支持时请关闭' },
+  ],
+  gemini: [
+    { key: 'interactions_api', label: 'Interactions API（新版协议）',
+      hint: '改走 Google GA 的 /v1beta/interactions 统一接口（steps 时间线，系统提示并入首个输入）。实验性，上游未上线请保持关闭',
+      beta: true },
+  ],
+}
+function featLabel(type: string, key: string) {
+  return FEATURE_DEFS[type]?.find((f) => f.key === key)?.label ?? key
+}
+function activeFeats(c: Channel) {
+  return Object.entries(c.options ?? {}).filter(([, v]) => v).map(([k]) => featLabel(c.type, k))
+}
 
 const filtered = computed(() => {
   let out = rows.value.filter((c) => {
@@ -119,7 +146,7 @@ async function load() {
 function openCreate() {
   editing.value = null
   Object.assign(form, { name: '', type: 'openai_compatible', base_url: '', api_key: '',
-    preset: '', weight: 100, priority: 0,
+    preset: '', weight: 100, priority: 0, auto_complete_url: true, options: {},
     supported_params: [...(presets.value.openai_compatible?.[0]?.supported_params ?? [])] })
   open.value = true
 }
@@ -127,6 +154,7 @@ function openEdit(c: Channel) {
   editing.value = c
   Object.assign(form, { name: c.name, type: c.type, base_url: c.base_url, api_key: '',
     preset: c.preset ?? '', weight: c.weight, priority: c.priority,
+    auto_complete_url: c.auto_complete_url ?? true, options: { ...(c.options ?? {}) },
     supported_params: [...(c.supported_params ?? [])] })
   open.value = true
 }
@@ -156,6 +184,7 @@ async function save() {
       const body: Record<string, unknown> = {
         version: editing.value.version, name: form.name, base_url: form.base_url,
         weight: form.weight, priority: form.priority, supported_params: form.supported_params,
+        auto_complete_url: form.auto_complete_url, options: form.options,
       }
       if (form.api_key.trim()) body.api_key = form.api_key
       const updated = await channelsApi.patch(editing.value.id, body)
@@ -293,6 +322,7 @@ onMounted(load)
       <div class="meta">
         <span class="pill">{{ PROTOCOLS.find(p => p.key === c.type)?.label ?? c.type }}</span>
         <span class="pill">Key {{ c.api_key_hint }}</span>
+        <span v-for="f in activeFeats(c)" :key="f" class="pill">{{ f }}</span>
         <span class="pill">优先级 {{ c.priority }}</span>
         <span class="pill">权重 {{ c.weight }}</span>
         <span v-if="c.last_latency_ms !== null" class="pill">{{ c.last_latency_ms }}ms</span>
@@ -333,16 +363,25 @@ onMounted(load)
         </button>
       </div>
 
+      <label class="fl">Base URL 自动补全</label>
+      <div class="tgrow">
+        <Switch v-model="form.auto_complete_url" />
+        <small class="tghint">开启：只需填厂商根地址（如 https://api.deepseek.com），系统自动补齐版本路径并纠正误粘贴的完整端点；关闭：完全按你输入的地址原样调用</small>
+      </div>
+
       <label class="fl">厂商预设（一键填充）</label>
       <select class="fi" :value="form.preset" @change="applyPreset(($event.target as HTMLSelectElement).value)">
         <option value="">不使用预设，手动填写</option>
         <option v-for="p in currentPreset" :key="p.name" :value="p.name">{{ p.name }}</option>
       </select>
 
-      <label class="fl">渠道名称</label>
+      <label class="fl">渠道名称（给自己看的别名）</label>
       <input v-model="form.name" class="fi" placeholder="例如：DeepSeek 主账号" />
-      <label class="fl">Base URL</label>
+      <label class="fl">Base URL（厂商接口地址）</label>
       <input v-model="form.base_url" class="fi" placeholder="https://api.deepseek.com/v1" />
+      <p class="note">{{ form.auto_complete_url
+        ? '只填到根地址即可（如 https://api.deepseek.com）——系统会自动补齐版本路径；误粘贴了带 /v1/messages 之类的完整端点也会被自动纠正。'
+        : '自动补全已关闭：请填写厂商要求的完整 Base URL（含版本路径），保存后系统原样使用。' }}</p>
       <label class="fl">API Key {{ editing ? '（留空表示不修改）' : '' }}</label>
       <input v-model="form.api_key" class="fi" type="password"
              :placeholder="editing ? `当前 ${editing.api_key_hint}` : 'sk-...'" />
@@ -354,6 +393,18 @@ onMounted(load)
       </template>
       <p v-if="form.type === 'gemini'" class="note">Gemini 的 Key 通过 x-goog-api-key 请求头传递，不会出现在 URL 中。</p>
 
+      <template v-if="FEATURE_DEFS[form.type]?.length">
+        <label class="fl">协议特性（按上游能力开关，拿不准就保持关闭）</label>
+        <div v-for="f in FEATURE_DEFS[form.type]" :key="f.key" class="featrow">
+          <div class="featinfo">
+            <b>{{ f.label }}<em v-if="f.beta" class="beta">实验</em></b>
+            <small>{{ f.hint }}</small>
+          </div>
+          <Switch :model-value="!!form.options[f.key]"
+                  @update:model-value="(v: boolean) => (form.options[f.key] = v)" />
+        </div>
+      </template>
+
       <label class="fl">参数白名单（不支持的参数不会发给上游）</label>
       <div class="params">
         <button v-for="p in ALL_PARAMS" :key="p" class="param"
@@ -361,8 +412,8 @@ onMounted(load)
       </div>
 
       <div class="two">
-        <div><label class="fl">优先级</label><input v-model.number="form.priority" class="fi" type="number" /></div>
-        <div><label class="fl">权重</label><input v-model.number="form.weight" class="fi" type="number" /></div>
+        <div><label class="fl">优先级（数字大者优先，故障自动切下一个）</label><input v-model.number="form.priority" class="fi" type="number" /></div>
+        <div><label class="fl">权重（同优先级之间按权重分流）</label><input v-model.number="form.weight" class="fi" type="number" /></div>
       </div>
       <template #footer>
         <button class="primary" :disabled="busy" @click="save">{{ busy ? '保存中…' : '保存' }}</button>
@@ -513,4 +564,14 @@ onMounted(load)
   .tools { padding-left: 0; padding-right: 0; }
   .card { margin-left: 24px; margin-right: 24px; }
 }
+
+.tgrow { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 4px; }
+.tgrow .tghint { flex: 1; color: var(--t4); font-size: var(--fs-cap); line-height: 1.5; padding-top: 2px; }
+.featrow { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px;
+  border: 1px solid var(--line); border-radius: var(--r-sm); margin-bottom: 6px; }
+.featinfo { flex: 1; min-width: 0; }
+.featinfo b { font-size: var(--fs-md); }
+.featinfo .beta { font-style: normal; font-size: 10px; color: var(--warn); border: 1px solid var(--warn);
+  border-radius: 4px; padding: 0 4px; margin-left: 6px; vertical-align: 2px; }
+.featinfo small { display: block; color: var(--t4); font-size: var(--fs-cap); line-height: 1.5; margin-top: 2px; }
 </style>

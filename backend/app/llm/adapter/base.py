@@ -18,6 +18,7 @@ class UnifiedRequest:
     max_tokens: int | None = None
     stop: list[str] | None = None
     stream: bool = True
+    cache_key: str | None = None
 
 
 @dataclass
@@ -76,8 +77,12 @@ class ProtocolAdapter(ABC):
     def __init__(self, *, base_url: str, api_key: str,
                  supported_params: list[str] | None = None,
                  timeout_first_token_ms: int = 15000,
-                 timeout_total_ms: int = 60000) -> None:
+                 timeout_total_ms: int = 60000,
+                 probe_model: str = "probe",
+                 options: dict[str, Any] | None = None) -> None:
         self.base_url = base_url.rstrip("/")
+        self.probe_model = probe_model
+        self.options = options or {}
         self.api_key = api_key
         self.supported_params = list(supported_params or self.default_params)
         self.timeout = httpx.Timeout(timeout_total_ms / 1000,

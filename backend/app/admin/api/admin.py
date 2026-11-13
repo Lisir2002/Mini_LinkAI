@@ -16,7 +16,12 @@ from app.core.redis_client import get_redis
 from app.interfaces.deps import get_db, require_admin
 from app.llm.adapter.base import UpstreamError
 from app.llm.adapter.presets import PRESETS
-from app.llm.services.channel_service import CHANNEL_COLS, build_adapter, invalidate_model_cache
+from app.llm.services.channel_service import (
+    CHANNEL_COLS,
+    build_adapter,
+    invalidate_model_cache,
+    normalize_base_url,
+)
 from app.users.services import audit_service
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
@@ -32,6 +37,8 @@ class ChannelIn(BaseModel):
     supported_params: list[str] | None = None
     weight: int = 100
     priority: int = 0
+    auto_complete_url: bool = True
+    options: dict[str, Any] | None = None
 
 
 class ChannelPatch(BaseModel):
@@ -42,6 +49,8 @@ class ChannelPatch(BaseModel):
     supported_params: list[str] | None = None
     weight: int | None = None
     priority: int | None = None
+    auto_complete_url: bool | None = None
+    options: dict[str, Any] | None = None
 
 
 class ToggleIn(BaseModel):
@@ -118,16 +127,18 @@ async def create_channel(body: ChannelIn, request: Request, user: dict[str, Any]
     defaults = (PRESETS[body.type][0].supported_params if PRESETS.get(body.type)
                 else ["temperature", "top_p", "max_tokens", "stream"])
     sp = body.supported_params if body.supported_params is not None else defaults
+    base_url = normalize_base_url(body.type, body.base_url, body.auto_complete_url)
     row = (await db.execute(
         text("INSERT INTO channels (name,type,base_url,api_key_enc,api_key_hint,preset,"
-             "supported_params,weight,priority) "
-             "VALUES (:n,:t,:b,:enc,:hint,:pr,CAST(:sp AS jsonb),:w,:pi) "
+             "supported_params,weight,priority,auto_complete_url,options) "
+             "VALUES (:n,:t,:b,:enc,:hint,:pr,CAST(:sp AS jsonb),:w,:pi,:ac,CAST(:op AS jsonb)) "
              f"RETURNING {CHANNEL_COLS}"),
-        {"n": body.name, "t": body.type, "b": body.base_url.rstrip("/"),
+        {"n": body.name, "t": body.type, "b": base_url,
          "enc": encrypt_api_key(body.api_key), "hint": key_hint(body.api_key),
          "pr": body.preset,
          "sp": json.dumps(sp),
-         "w": body.weight, "pi": body.priority})).mappings().one()
+         "w": body.weight, "pi": body.priority,
+         "ac": body.auto_complete_url, "op": json.dumps(body.options or {})})).mappings().one()
     await audit_service.record(db, actor_id=user["id"], action="channel.create",
                                target_type="channel", target_id=str(row["id"]),
                                detail={"name": body.name, "type": body.type})
@@ -160,10 +171,16 @@ async def patch_channel(cid: int, body: ChannelPatch, user: dict[str, Any] = Adm
     if cur["version"] != body.version:
         raise AppError(409, "CONFLICT_STALE", "配置已被他人修改，请刷新后重试")
     sets: dict[str, Any] = {"version": cur["version"] + 1}
-    for f in ("name", "base_url", "weight", "priority"):
+    for f in ("name", "weight", "priority"):
         v = getattr(body, f)
         if v is not None:
             sets[f] = v
+    if body.auto_complete_url is not None:
+        sets["auto_complete_url"] = body.auto_complete_url
+    if body.base_url is not None or body.auto_complete_url is not None:
+        auto = sets.get("auto_complete_url", cur.get("auto_complete_url", True))
+        src = body.base_url if body.base_url is not None else cur["base_url"]
+        sets["base_url"] = normalize_base_url(cur["type"], src, auto)
     if body.api_key:
         sets["api_key_enc"] = encrypt_api_key(body.api_key)
         sets["api_key_hint"] = key_hint(body.api_key)
@@ -173,6 +190,9 @@ async def patch_channel(cid: int, body: ChannelPatch, user: dict[str, Any] = Adm
     clause = ", ".join(f"{k}=:{k}" for k in sets)
     if body.supported_params is not None:
         clause += ", supported_params=CAST(:sp AS jsonb)"
+    if body.options is not None:
+        params["op"] = json.dumps(body.options)
+        clause += ", options=CAST(:op AS jsonb)"
     row = (await db.execute(
         text(f"UPDATE channels SET {clause}, updated_at=now() WHERE id=:i "
              f"RETURNING {CHANNEL_COLS}"), params)).mappings().one()
@@ -207,7 +227,16 @@ async def delete_channel(cid: int, user: dict[str, Any] = Admin, confirm: bool =
 async def test_channel(cid: int, _: dict[str, Any] = Admin,
                        db: AsyncSession = Depends(get_db)) -> dict[str, Any]:
     row = await _load_channel(db, cid)
-    result = build_adapter(row).test_connectivity()
+    probe = None
+    discovered = row.get("discovered_models") or []
+    if discovered:
+        first = discovered[0]
+        probe = first if isinstance(first, str) else first.get("id")
+    if not probe:
+        probe = (await db.execute(text(
+            "SELECT upstream_model FROM model_channels WHERE channel_id=:i AND enabled "
+            "LIMIT 1"), {"i": cid})).scalar_one_or_none()
+    result = build_adapter(row, probe_model=probe).test_connectivity()
     res = await result
     await db.execute(text("UPDATE channels SET last_check_at=now(), last_latency_ms=:l "
                           "WHERE id=:i"), {"l": res.latency_ms, "i": cid})
