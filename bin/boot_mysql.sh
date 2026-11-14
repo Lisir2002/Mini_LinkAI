@@ -1,6 +1,6 @@
 #!/bin/sh
 # 全自包含 MySQL 启动（二进制与动态库均在 .runtime/，不依赖系统包）
-S=/data/workspace/linkai-site
+S="$(cd "$(dirname "$0")/.." && pwd)"
 export LD_LIBRARY_PATH="$S/.runtime/lib"
 M="$S/.runtime/bin/mysqld"
 PHP="$S/.runtime/bin/php"
