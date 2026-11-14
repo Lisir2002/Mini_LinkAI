@@ -7,7 +7,7 @@ if [ -x "$S/.runtime/bin/php" ]; then
 else
   PHP=php; PHPINI=""
 fi
-export PHP_CLI_SERVER_WORKERS="${PHP_CLI_SERVER_WORKERS:-8}"
+export PHP_CLI_SERVER_WORKERS="${PHP_CLI_SERVER_WORKERS:-16}"
 HOST="${HOST:-0.0.0.0}"; PORT="${PORT:-8080}"
 echo "LinkAI PHP 站点: http://$HOST:$PORT  (workers=$PHP_CLI_SERVER_WORKERS)"
 exec "$PHP" $PHPINI -S "$HOST:$PORT" -t "$S/public" "$S/public/index.php"
