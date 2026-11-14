@@ -11,30 +11,54 @@ if [ -x "$S/.runtime/bin/php" ] && [ -x "$S/.runtime/bin/mysqld" ]; then
   exit 0
 fi
 
-echo "    查询 Release: $API"
-meta="$(curl -sS -m 20 "$API" 2>/dev/null)"
-tag="$(printf '%s' "$meta" | tr ',' '\n' | grep -o '"tag_name":"[^"]*"' | head -1 | cut -d'"' -f4)"
-if [ -z "$tag" ]; then
-  echo "    无法读取 Release 信息（网络受限？），请手动下载 $ASSET 解压到 $S/"
-  exit 1
+echo "    查询 Release 附件"
+meta="$(curl -sS -m 20 -H 'Accept: application/vnd.github+json' "$API" 2>/dev/null)"
+tag=""; aid=""
+if command -v python3 >/dev/null 2>&1; then
+  pair="$(printf '%s' "$meta" | python3 -c '
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    name = "'"$ASSET"'"
+    for a in d.get("assets", []):
+        if a.get("name") == name:
+            print(a["id"], d.get("tag_name", "")); break
+except Exception:
+    pass' 2>/dev/null)"
+  aid="$(printf '%s' "$pair" | awk '{print $1}')"
+  tag="$(printf '%s' "$pair" | awk '{print $2}')"
 fi
-assets="$(curl -sS -m 20 "https://api.github.com/repos/$REPO/releases/tags/$tag" 2>/dev/null)"
-aid="$(printf '%s' "$assets" | tr '{' '\n' | grep -F "\"name\":\"$ASSET\"" | grep -o '"id":[0-9]*' | head -1 | cut -d: -f2)"
 if [ -z "$aid" ]; then
-  echo "    Release $tag 里找不到 $ASSET，请检查仓库 Release 页面"
+  echo "    无法解析 Release 附件（需要 python3，或网络受限）"
+  echo "    请手动下载 $ASSET 并解压到 $S/"
   exit 1
 fi
-echo "    下载 asset #$aid ($tag) ..."
+echo "    asset #$aid (tag $tag)"
+
 tmp="$S/.runtime.tar.gz.part"
-if curl -sSL -m 600 -H 'Accept: application/octet-stream' \
-     -o "$tmp" "https://api.github.com/repos/$REPO/releases/assets/$aid"; then
-  mv "$tmp" "$S/runtime.tar.gz"
-  tar -xzf "$S/runtime.tar.gz" -C "$S" && rm -f "$S/runtime.tar.gz"
-  chmod +x "$S/.runtime/bin/"* 2>/dev/null || true
-  echo "    运行时就绪：$S/.runtime"
-  [ -x "$S/.runtime/bin/php" ] && [ -x "$S/.runtime/bin/mysqld" ]
+ok=0
+# 通道 1：GitHub API asset 端点（会 302 到 release-assets.githubusercontent.com）
+if curl -sSL -m 900 -H 'Accept: application/octet-stream' \
+     -o "$tmp" "https://api.github.com/repos/$REPO/releases/assets/$aid" \
+   && [ -s "$tmp" ] && [ "$(wc -c < "$tmp")" -gt 1000000 ]; then
+  ok=1
 else
   rm -f "$tmp"
-  echo "    下载失败"
+  # 通道 2：github.com Release 直链（部分网络环境下更通）
+  echo "    通道 1 失败，改用 Release 直链"
+  if curl -sSL -m 900 -o "$tmp" \
+       "https://github.com/$REPO/releases/download/$tag/$ASSET" \
+     && [ -s "$tmp" ] && [ "$(wc -c < "$tmp")" -gt 1000000 ]; then
+    ok=1
+  fi
+fi
+if [ "$ok" -ne 1 ]; then
+  rm -f "$tmp"
+  echo "    下载失败：请手动下载 $ASSET 解压到 $S/，或改用 README 中的方式 B（系统 PHP + MySQL）"
   exit 1
 fi
+mv "$tmp" "$S/runtime.tar.gz"
+tar -xzf "$S/runtime.tar.gz" -C "$S" && rm -f "$S/runtime.tar.gz"
+chmod +x "$S/.runtime/bin/"* 2>/dev/null || true
+echo "    运行时就绪：$S/.runtime"
+[ -x "$S/.runtime/bin/php" ] && [ -x "$S/.runtime/bin/mysqld" ]
