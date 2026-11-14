@@ -50,7 +50,7 @@ def find_zip():
         os.path.join(here, 'Mini_LinkAI_PHP_源码包.zip'),
         os.path.join(here, '..', 'Mini_LinkAI_PHP_源码包.zip'),
         os.path.join(os.getcwd(), 'Mini_LinkAI_PHP_源码包.zip'),
-        '/data/workspace/Mini_LinkAI_PHP_源码包.zip',
+        os.path.join(os.getcwd(), 'linkai-site.zip'),
     ]
     for c in cands:
         if c and os.path.isfile(c): return os.path.abspath(c)
