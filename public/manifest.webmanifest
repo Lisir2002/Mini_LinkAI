@@ -1,0 +1,9 @@
+{
+  "name": "LinkAI 多房间 AI 聊天",
+  "short_name": "LinkAI",
+  "start_url": "/#/msgs",
+  "display": "standalone",
+  "background_color": "#f5f6fa",
+  "theme_color": "#4f46e5",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}
