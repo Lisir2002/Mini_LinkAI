@@ -5,9 +5,12 @@ import json, os, sys, urllib.request, urllib.error
 from playwright.sync_api import sync_playwright
 
 DRAWER_ONLY = '--drawer-only' in sys.argv
-BASE = 'http://127.0.0.1:8080'
-SHOTS = '/data/workspace/audit_shots'
+BASE = os.environ.get('LK_BASE', 'http://127.0.0.1:8080')
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+SHOTS = os.environ.get('LK_AUDIT_SHOTS', os.path.join(ROOT, 'audit_shots'))
+OUT_JSON = os.path.join(ROOT, 'logs', 'layout_audit.json')
 os.makedirs(SHOTS, exist_ok=True)
+os.makedirs(os.path.dirname(OUT_JSON), exist_ok=True)
 
 def req(path, method='GET', body=None, token=None):
     h = {'Content-Type': 'application/json'}
@@ -163,7 +166,7 @@ report['verdict'] = {
     'problem_checks': len(problems),
     'console_errors': len(report['console_errors']),
 }
-with open('/data/workspace/linkai-site/logs/layout_audit.json', 'w', encoding='utf-8') as f:
+with open(OUT_JSON, 'w', encoding='utf-8') as f:
     json.dump(report, f, ensure_ascii=False, indent=2)
 print('\n=== 汇总 ===', json.dumps(report['verdict'], ensure_ascii=False))
 for p in problems[:30]: print('  ISSUE', p[:300])
