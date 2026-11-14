@@ -3,10 +3,12 @@
 """真实跑一遍站点：API 全链路 + 浏览器三宽度截图，逐项记录，不假装成功。"""
 import json, os, sys, time, urllib.request, urllib.error, urllib.parse, traceback
 
-BASE = 'http://127.0.0.1:8080'
-OUT = '/data/workspace/linkai-site/logs'
-SHOTS = '/data/workspace/screenshots'
+BASE = os.environ.get('LK_BASE', 'http://127.0.0.1:8080')
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+OUT = os.path.join(ROOT, 'logs')
+SHOTS = os.environ.get('LK_SHOTS', os.path.join(ROOT, 'screenshots'))
 os.makedirs(SHOTS, exist_ok=True)
+os.makedirs(OUT, exist_ok=True)
 report = {'api': [], 'browser': [], 'screenshots': [], 'issues': []}
 
 def req(path, method='GET', body=None, token=None, timeout=30, raw=False):
@@ -43,12 +45,15 @@ def check(name, fn):
 print('=== A. API 全链路 ===')
 # 每次都恢复到「首次登录强制改密」，保证断言可重复执行
 import subprocess
-_S = '/data/workspace/linkai-site'
+_S = ROOT
+_php = os.path.join(_S, '.runtime', 'bin', 'php')
+_ini = os.path.join(_S, '.runtime', 'php.ini')
+_cmd = [_php, '-c', _ini, '-r'] if os.path.isfile(_php) else ['php', '-r']
 _restore = ('require "' + _S + '/src/db.php"; '
             'q("UPDATE users SET must_change_password=1 WHERE email=?", ["admin@demo.com"]);')
 try:
-    subprocess.run([_S + '/.runtime/bin/php', '-c', _S + '/.runtime/php.ini', '-r', _restore],
-                   env=dict(os.environ, LD_LIBRARY_PATH=_S + '/.runtime/lib'),
+    subprocess.run(_cmd + [_restore],
+                   env=dict(os.environ, LD_LIBRARY_PATH=os.path.join(_S, '.runtime', 'lib')),
                    capture_output=True, timeout=20)
 except Exception as _e:
     print('  (恢复演示状态失败，可忽略:', str(_e)[:80], ')')
@@ -186,11 +191,13 @@ print('=== B. 浏览器实测 ===')
 try:
     # 恢复「首次强制改密」，让浏览器真实走一遍 登录 → 改密 → 主界面
     import subprocess
-    S = '/data/workspace/linkai-site'
+    S = ROOT
     restore = ('require "' + S + '/src/db.php"; '
                'q("UPDATE users SET must_change_password=1 WHERE email=?", ["admin@demo.com"]);')
-    subprocess.run([S + '/.runtime/bin/php', '-c', S + '/.runtime/php.ini', '-r', restore],
-                   env=dict(os.environ, LD_LIBRARY_PATH=S + '/.runtime/lib'),
+    _php = os.path.join(S, '.runtime', 'bin', 'php')
+    _cmd = [_php, '-c', os.path.join(S, '.runtime', 'php.ini'), '-r'] if os.path.isfile(_php) else ['php', '-r']
+    subprocess.run(_cmd + [restore],
+                   env=dict(os.environ, LD_LIBRARY_PATH=os.path.join(S, '.runtime', 'lib')),
                    capture_output=True, timeout=20)
     from playwright.sync_api import sync_playwright
     exe = None
